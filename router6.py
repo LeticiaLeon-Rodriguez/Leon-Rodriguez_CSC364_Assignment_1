@@ -115,7 +115,7 @@ def start_server():
     soc.listen()
     print("Socket now listening")
 
-    forwarding_table = read_csv("router_6_table.csv")
+    forwarding_table = read_csv("input/router_6_table.csv")
     default_gateway_port = find_default_gateway(forwarding_table)
     forwarding_table_with_range = generate_forwarding_table_with_range(forwarding_table)
 

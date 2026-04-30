@@ -158,14 +158,14 @@ router4_socket = create_socket("127.0.0.1", 8004)
 router4_socket.send("ROUTER1".encode())
 
 # 2. Read in and store the forwarding table.
-forwarding_table = read_csv("router_1_table.csv")
+forwarding_table = read_csv("input/router_1_table.csv")
 # 3. Store the default gateway port.
 default_gateway_port = find_default_gateway(forwarding_table)
 # 4. Generate a new forwarding table that includes the IP ranges for matching against destination IPS.
 forwarding_table_with_range = generate_forwarding_table_with_range(forwarding_table)
 
 # 5. Read in and store the packets.
-packets_table = read_csv("packets.csv")
+packets_table = read_csv("input/packets.csv")
 
 # 6. For each packet,
 for packet in packets_table:
