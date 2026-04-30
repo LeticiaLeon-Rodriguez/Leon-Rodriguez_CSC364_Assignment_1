@@ -99,7 +99,7 @@ def write_to_file(path, packet_to_write, send_to_router=None):
     out_file.close()
 
 
-# Shared inbound connection registry for interfaces b and c
+# Shared inbound connection registry for Router 4's special interfaces
 inbound_connections = {}
 inbound_lock = Lock()
 
@@ -142,6 +142,10 @@ def start_server():
     default_gateway_port = find_default_gateway(forwarding_table)
     forwarding_table_with_range = generate_forwarding_table_with_range(forwarding_table)
 
+    # Open outgoing sockets once
+    router5_socket = create_socket("127.0.0.1", 8005)
+    router6_socket = create_socket("127.0.0.1", 8006)
+
     while True:
         connection, address = soc.accept()
         ip = address[0]
@@ -153,17 +157,22 @@ def start_server():
 
             Thread(
                 target=processing_thread,
-                args=(connection, ip, remote_port, forwarding_table_with_range, default_gateway_port)
+                args=(
+                    connection,
+                    ip,
+                    remote_port,
+                    forwarding_table_with_range,
+                    default_gateway_port,
+                    router5_socket,
+                    router6_socket
+                )
             ).start()
         except:
             print("Thread did not start.")
             traceback.print_exc()
 
 
-def processing_thread(connection, ip, port, forwarding_table_with_range, default_gateway_port, max_buffer_size=5120):
-    router5_socket = create_socket("127.0.0.1", 8005)
-    router6_socket = create_socket("127.0.0.1", 8006)
-
+def processing_thread(connection, ip, port, forwarding_table_with_range, default_gateway_port, router5_socket, router6_socket, max_buffer_size=5120):
     while True:
         packet = receive_packet(connection, max_buffer_size)
 
@@ -193,7 +202,11 @@ def processing_thread(connection, ip, port, forwarding_table_with_range, default
         if send_port is None:
             send_port = default_gateway_port
 
-        if send_port == "8005" and new_ttl > 0:
+        if send_port == "127.0.0.1":
+            print("OUT:", payload)
+            write_to_file("output/out_router_4.txt", payload)
+
+        elif send_port == "8005" and new_ttl > 0:
             print("sending packet", new_packet, "to Router 5")
             write_to_file("output/sent_by_router_4.txt", new_packet, "5")
             router5_socket.send(new_packet.encode())
@@ -224,10 +237,6 @@ def processing_thread(connection, ip, port, forwarding_table_with_range, default
             else:
                 print("DISCARD: missing interface c for", new_packet)
                 write_to_file("output/discarded_by_router_4.txt", new_packet)
-
-        elif send_port == "127.0.0.1":
-            print("OUT:", payload)
-            write_to_file("output/out_router_4.txt", payload)
 
         else:
             print("DISCARD:", new_packet)

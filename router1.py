@@ -155,6 +155,7 @@ for f in files:
 # 1. Connect to the appropriate sending ports (based on the network topology diagram).
 router2_socket = create_socket("127.0.0.1", 8002)
 router4_socket = create_socket("127.0.0.1", 8004)
+router4_socket.send("ROUTER1".encode())
 
 # 2. Read in and store the forwarding table.
 forwarding_table = read_csv("router_1_table.csv")

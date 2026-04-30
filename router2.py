@@ -192,6 +192,13 @@ def start_server():
     # 6. Generate a new forwarding table that includes the IP ranges for matching against destination IPS.
     forwarding_table_with_range = generate_forwarding_table_with_range(forwarding_table)
 
+    # Open outgoing sockets once
+    router3_socket = create_socket("127.0.0.1", 8003)
+    router4_socket = create_socket("127.0.0.1", 8004)
+
+    # Identify this connection to Router 4 as interface c
+    router4_socket.send("ROUTER2".encode())
+
     # 7. Continuously process incoming packets.
     while True:
         # 8. Accept the connection.
@@ -203,7 +210,7 @@ def start_server():
         try:
             Thread(
                 target=processing_thread,
-                args=(connection, ip, port, forwarding_table_with_range, default_gateway_port)
+                args=(connection, ip, port, forwarding_table_with_range, default_gateway_port, router3_socket, router4_socket)
             ).start()
         except:
             print("Thread did not start.")
@@ -211,10 +218,10 @@ def start_server():
 
 
 # The purpose of this function is to receive and process incoming packets.
-def processing_thread(connection, ip, port, forwarding_table_with_range, default_gateway_port, max_buffer_size=5120):
+def processing_thread(connection, ip, port, forwarding_table_with_range, default_gateway_port, router3_socket, router4_socket, max_buffer_size=5120):
     # 1. Connect to the appropriate sending ports (based on the network topology diagram).
-    router3_socket = create_socket("127.0.0.1", 8003)
-    router4_socket = create_socket("127.0.0.1", 8004)
+    # router3_socket = create_socket("127.0.0.1", 8003) - start once in start_server
+    # router4_socket = create_socket("127.0.0.1", 8004) - start once in start_server
 
     # 2. Continuously process incoming packets
     while True:
